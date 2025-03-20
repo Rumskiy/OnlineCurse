@@ -13,10 +13,20 @@ class Section extends Model implements HasMedia
 
     protected $fillable = [
         'title',
+        'section_img',
         'content',
         'course_id',
         'order'
     ];
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('section_images')
+            ->singleFile();
+
+        $this->addMediaCollection('section_videos')
+            ->useDisk('s3');
+    }
 
     public function course()
     {

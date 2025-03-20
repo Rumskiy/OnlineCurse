@@ -6,18 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-
     public function up(): void
     {
         Schema::create('sections', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->text('content')->nullable(); // Текст або TipTap JSON
-            $table->foreignId('course_id')->constrained()->onDelete('cascade');
-            $table->integer('order')->default(1); // Порядок розділу в курсі
+            $table->text('content')->nullable();
+            $table->unsignedBigInteger('course_id');
+            $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
+            $table->integer('order')->nullable();
             $table->timestamps();
+            $table->boolean('is_unlocked')->default(false);
         });
-
     }
 
     public function down(): void
@@ -25,3 +25,4 @@ return new class extends Migration
         Schema::dropIfExists('sections');
     }
 };
+

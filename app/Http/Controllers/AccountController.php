@@ -11,7 +11,15 @@ class AccountController extends Controller
     public function getUser()
     {
         $user = Auth::user();
-        return response()->json($user);
+
+        return response()->json([
+            'id' => (string) $user->id,
+            'firstName' => $user->firstName,
+            'lastName' => $user->lastName,
+            'email' => $user->email,
+            'role' => $user->role,
+            'status' => $user->status,
+        ]);
     }
 
     public function update(Request $request)

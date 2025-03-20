@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Section;
 use App\Models\Test;
 use Illuminate\Http\Request;
 
@@ -12,16 +13,12 @@ class TestController extends Controller
         $data = $request->validate([
             'question' => 'required|string',
             'options' => 'required|array',
-            'correct_answer' => 'required|integer',
+            'correct_answers' => 'required|array',
             'section_id' => 'required|exists:sections,id',
         ]);
 
-        $test = Test::create([
-            'question' => $data['question'],
-            'options' => json_encode($data['options']),
-            'correct_answer' => $data['correct_answer'],
-            'section_id' => $data['section_id'],
-        ]);
+        $data['correct_answers'] = json_encode($data['correct_answers']);
+        $test = Test::create($data);
 
         return response()->json($test, 201);
     }
@@ -31,17 +28,55 @@ class TestController extends Controller
         $data = $request->validate([
             'question' => 'sometimes|string',
             'options' => 'sometimes|array',
-            'correct_answer' => 'sometimes|integer',
+            'correct_answers' => 'sometimes|array',
         ]);
 
-        $test->update([
-            'question' => $data['question'] ?? $test->question,
-            'options' => isset($data['options']) ? json_encode($data['options']) : $test->options,
-            'correct_answer' => $data['correct_answer'] ?? $test->correct_answer,
-        ]);
+        $test->update($data);
 
         return response()->json($test);
     }
+
+    public function checkTest(Request $request, Section $section)
+    {
+        $data = $request->validate([
+            'answers' => 'required|array',
+        ]);
+
+        $correctAnswers = json_decode($section->test->correct_answers, true);
+        $totalQuestions = count($correctAnswers);
+        $correctCount = 0;
+
+        foreach ($data['answers'] as $key => $answer) {
+            if (in_array($answer, $correctAnswers[$key])) {
+                $correctCount++;
+            }
+        }
+
+        $score = ($correctCount / $totalQuestions) * 100;
+
+        if ($score >= 90) {
+            $nextSection = Section::where('course_id', $section->course_id)
+                ->where('order', '>', $section->order)
+                ->orderBy('order')
+                ->first();
+
+            if ($nextSection) {
+                $nextSection->update(['is_unlocked' => true]);
+            }
+
+            return response()->json([
+                'message' => 'Test passed successfully!',
+                'score' => $score,
+                'next_section_unlocked' => $nextSection ? true : false,
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Test failed. Try again!',
+            'score' => $score,
+        ], 400);
+    }
+
 
     public function destroy(Test $test)
     {

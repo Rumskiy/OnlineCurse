@@ -11,8 +11,10 @@ return new class extends Migration {
             $table->string('title');
             $table->string('title_img');
             $table->text('description');
-            $table->foreignId('category_id')->constrained()->onDelete('cascade');
-            $table->foreignId('author_id')->constrained('users')->onDelete('cascade');
+            $table->unsignedBigInteger('category_id');
+            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
+            $table->uuid('author_id');
+            $table->foreign('author_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });
 

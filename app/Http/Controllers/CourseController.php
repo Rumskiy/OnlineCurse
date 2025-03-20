@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CourseController extends Controller {
     public function index(Request $request)
     {
-        $query = Course::with('Rategory');
+        $query = Course::with('category');
 
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
@@ -23,44 +24,59 @@ class CourseController extends Controller {
     {
         $user = $request->user();
 
-        $courses = Course::where($user->id)
-            ->with('Rategory')
+        $courses = Course::where('author_id', $user->id)
+        ->with('category')
             ->get();
 
         return response()->json($courses);
     }
 
-
     public function store(Request $request)
     {
         $data = $request->validate([
             'title' => 'required|string',
-            'title_img' => 'nullable|string',
             'description' => 'required|string',
             'category_id' => 'required|exists:categories,id',
+            'title_img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $data['author_id'] = auth()->id();
+        $data['author_id'] = Auth::user()->id;
 
         $course = Course::create($data);
+
+        // Upload title image
+        if ($request->hasFile('title_img')) {
+            $course->addMediaFromRequest('title_img')->toMediaCollection('title_images');
+        }
 
         return response()->json($course, 201);
     }
 
     public function show(Course $course) {
-        return response()->json($course->load('Rategory', 'author'));
+        return response()->json($course->load('category', 'author'));
     }
 
-    public function update(Request $request, Course $course)
+    public function update(Request $request, $id)
     {
+        // Validate the request
         $data = $request->validate([
-            'title' => 'sometimes|string',
-            'title_img' => 'sometimes|string',
-            'description' => 'sometimes|string',
-            'category_id' => 'sometimes|exists:categories,id',
+            'title' => 'required|string',
+            'description' => 'required|string',
+            'category_id' => 'required|exists:categories,id',
+            'title_img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Allow nullable image
         ]);
 
+        // Find the course
+        $course = Course::findOrFail($id);
+
+        // Update the course
         $course->update($data);
+
+        // Handle file upload
+        if ($request->hasFile('title_img')) {
+            $course->clearMediaCollection('title_images');
+            $course->addMediaFromRequest('title_img')->toMediaCollection('title_images');
+        }
 
         return response()->json($course);
     }
@@ -72,4 +88,3 @@ class CourseController extends Controller {
         return response()->json(['message' => 'Course deleted']);
     }
 }
-

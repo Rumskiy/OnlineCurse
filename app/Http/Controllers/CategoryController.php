@@ -14,12 +14,13 @@ class CategoryController extends Controller {
 
     public function store(CreateCategory $request) {
         $category = Category::create([
+            'id' => $request->get('id'),
             'name' => $request->name,
         ]);
 
         return response()->json([
             'message' => 'Category created successfully',
-            'Rategory' => CategoryResource::make($category)
+            'Category' => CategoryResource::make($category)
         ], 201);
     }
 

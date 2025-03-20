@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\category\create;
+namespace App\Http\Requests\Course\CreateCourse;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CreateCategory extends FormRequest
+class CreateCourse extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,8 +22,10 @@ class CreateCategory extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required','unique:categories'],
-
+            'title' => 'required|string',
+            'description' => 'required|string',
+            'category_id' => 'required|exists:categories,id',
+            'title_img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ];
     }
 }

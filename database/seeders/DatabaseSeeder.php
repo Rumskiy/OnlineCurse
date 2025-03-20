@@ -19,15 +19,17 @@ class DatabaseSeeder extends Seeder
         // Створення адміністратора
         User::factory()->create([
             'email' => 'admin@admin.com',
+            'firstName' => 'Admin',
+            'lastName' => 'Admin',
             'password' => Hash::make('121212')
         ]);
 
         // Створення курсів, секцій та тестів
-        Course::factory()->count(1)->create()->each(function ($course) {
-            $course->sections()->saveMany(Section::factory()->count(1)->make())->each(function ($section) {
-                $section->test()->save(Test::factory()->make());
-            });
-        });
+//        Course::factory()->count(1)->create()->each(function ($course) {
+//            $course->sections()->saveMany(Section::factory()->count(1)->make())->each(function ($section) {
+//                $section->test()->save(Test::factory()->make());
+//            });
+//        });
     }
 }
 

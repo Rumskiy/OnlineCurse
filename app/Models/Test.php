@@ -12,12 +12,13 @@ class Test extends Model
     protected $fillable = [
         'question',
         'options',
-        'correct_answer',
+        'correct_answers',
         'section_id'
     ];
 
     protected $casts = [
         'options' => 'array',
+        'correct_answers' => 'array',
     ];
 
     public function section()
@@ -25,4 +26,5 @@ class Test extends Model
         return $this->belongsTo(Section::class);
     }
 }
+
 

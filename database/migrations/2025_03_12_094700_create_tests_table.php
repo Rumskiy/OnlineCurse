@@ -6,18 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-
     public function up(): void
     {
         Schema::create('tests', function (Blueprint $table) {
             $table->id();
             $table->string('question');
             $table->json('options'); // Масив відповідей
-            $table->string('correct_answer'); // ID або текст правильної відповіді
-            $table->foreignId('section_id')->constrained()->onDelete('cascade');
+            $table->json('correct_answers'); // Масив правильних відповідей
+            $table->unsignedBigInteger('section_id');
+            $table->foreign('section_id')->references('id')->on('sections')->onDelete('cascade');
             $table->timestamps();
         });
-
     }
 
     public function down(): void
@@ -25,3 +24,4 @@ return new class extends Migration
         Schema::dropIfExists('tests');
     }
 };
+

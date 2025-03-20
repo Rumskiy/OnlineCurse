@@ -10,40 +10,40 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthenticationController extends Controller
 {
-    public function register(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'firstName' => 'required|string|max:255',
-            'lastName' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'phone' => 'nullable|string|max:20',
-            'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|in:admin,teacher,student',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $user = User::create([
-            'firstName' => $request->firstName,
-            'lastName' => $request->lastName,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-            'status' => 'active',
-        ]);
-
-        return response()->json([
-            'status' => true,
-            'message' => 'User registered successfully',
-            'user' => $user
-        ]);
-    }
+//    public function register(Request $request)
+//    {
+//        $validator = Validator::make($request->all(), [
+//            'firstName' => 'required|string|max:255',
+//            'lastName' => 'required|string|max:255',
+//            'email' => 'required|email|unique:users,email',
+//            'phone' => 'nullable|string|max:20',
+//            'password' => 'required|string|min:6|confirmed',
+//            'role' => 'required|in:admin,teacher,student',
+//        ]);
+//
+//        if ($validator->fails()) {
+//            return response()->json([
+//                'status' => false,
+//                'errors' => $validator->errors(),
+//            ], 422);
+//        }
+//
+//        $user = User::create([
+//            'firstName' => $request->firstName,
+//            'lastName' => $request->lastName,
+//            'email' => $request->email,
+//            'phone' => $request->phone,
+//            'password' => Hash::make($request->password),
+//            'role' => $request->role,
+//            'status' => 'active',
+//        ]);
+//
+//        return response()->json([
+//            'status' => true,
+//            'message' => 'User registered successfully',
+//            'user' => $user
+//        ]);
+//    }
 
     public function authenticate(Request $request)
     {
