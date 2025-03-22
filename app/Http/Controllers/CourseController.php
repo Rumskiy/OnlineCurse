@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 
 class CourseController extends Controller {
     public function index(Request $request)
@@ -25,11 +27,14 @@ class CourseController extends Controller {
         $user = $request->user();
 
         $courses = Course::where('author_id', $user->id)
-        ->with('category')
+            ->with('category')
             ->get();
 
-        return response()->json($courses);
+        return response()->json([
+            'data' => $courses
+        ]);
     }
+
 
     public function store(Request $request)
     {
@@ -40,46 +45,52 @@ class CourseController extends Controller {
             'title_img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $data['author_id'] = Auth::user()->id;
+        $data['author_id'] = Auth::id();
 
         $course = Course::create($data);
 
-        // Upload title image
-        if ($request->hasFile('title_img')) {
-            $course->addMediaFromRequest('title_img')->toMediaCollection('title_images');
-        }
+        $course->addMediaFromRequest('image')->toMediaCollection('images');
 
-        return response()->json($course, 201);
+        return response()->json(['data' => $course], 201);
     }
+
 
     public function show(Course $course) {
-        return response()->json($course->load('category', 'author'));
+        return response()->json([
+            'data' => $course->load('category', 'author')
+        ]);
     }
 
-    public function update(Request $request, $id)
+
+    /**
+     * @throws FileDoesNotExist
+     * @throws FileIsTooBig
+     */
+    public function update(Request $request, Course $course)
     {
-        // Validate the request
         $data = $request->validate([
-            'title' => 'required|string',
-            'description' => 'required|string',
-            'category_id' => 'required|exists:categories,id',
-            'title_img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Allow nullable image
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'category_id' => 'required|integer|exists:categories,id',
+            'title_img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        // Find the course
-        $course = Course::findOrFail($id);
-
-        // Update the course
-        $course->update($data);
-
-        // Handle file upload
+        // Delete old image if a new one is uploaded
         if ($request->hasFile('title_img')) {
-            $course->clearMediaCollection('title_images');
-            $course->addMediaFromRequest('title_img')->toMediaCollection('title_images');
+            $course->clearMediaCollection('images');
+            $course->addMediaFromRequest('title_img')->toMediaCollection('images');
         }
 
-        return response()->json($course);
+        $course->update($data);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Course updated successfully',
+            'data' => $course,
+        ]);
     }
+
+
 
     public function destroy(Course $course)
     {

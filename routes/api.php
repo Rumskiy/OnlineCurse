@@ -34,8 +34,9 @@ Route::prefix('categories')->group(function () {
 Route::prefix('courses')->group(function () {
     Route::get('/', [CourseController::class, 'index']);
     Route::post('/', [CourseController::class, 'store'])->middleware('auth:sanctum');
+    Route::get('/{course}', [CourseController::class, 'show']);
     Route::put('/edit/{course}', [CourseController::class, 'update'])->middleware('auth:sanctum');
-    Route::get('/{course}/sections', [SectionController::class, 'index']);
+    Route::get('/sections/{course}', [SectionController::class, 'index']);
 });
 
 Route::post('/sections', [SectionController::class, 'store']);

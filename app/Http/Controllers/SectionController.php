@@ -18,7 +18,7 @@ class SectionController extends Controller
         $data = $request->validate([
             'title' => 'required|string',
             'title_img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
-            'section_video' => 'nullable|mimetypes:video/mp4,video/quicktime|max:102400', // 100MB max
+            'section_video' => 'required|nullable|mimetypes:video/mp4,video/quicktime|max:102400', // 100MB max
             'content' => 'nullable|json',
             'course_id' => 'required|exists:courses,id',
             'order' => 'required|integer',
