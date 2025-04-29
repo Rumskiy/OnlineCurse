@@ -2,24 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Course\CreateCourse\CreateCourse;
+use App\Http\Requests\Course\UpdateCourse\UpdateCourse;
+use App\Http\Resources\Course\CourseResource;
 use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
-use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 
-class CourseController extends Controller {
+class CourseController extends Controller
+{
     public function index(Request $request)
     {
-        $query = Course::with('category');
+        $data = Course::all();
 
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
-
-        return response()->json([
-            'data' => $query->paginate(24)
-        ]);
+        return $this->sendJsonWhisData($data, CourseResource::class);
     }
 
     public function userCourses(Request $request)
@@ -30,66 +26,47 @@ class CourseController extends Controller {
             ->with('category')
             ->get();
 
-        return response()->json([
-            'data' => $courses
-        ]);
+        return $this->sendJsonWhisData($courses, CourseResource::class);
     }
 
 
-    public function store(Request $request)
+    public function store(CreateCourse $request, Course $course)
     {
-        $data = $request->validate([
-            'title' => 'required|string',
-            'description' => 'required|string',
-            'category_id' => 'required|exists:categories,id',
-            'title_img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        $course = Course::create([
+            'title' => $request->title,
+            'description' => $request->description,
+            'category_id' => $request->category_id,
+            'author_id' => Auth::id(),
         ]);
 
-        $data['author_id'] = Auth::id();
+        if ($request->hasFile('title_img')) {
+            $course->addMediaFromRequest('title_img')->toMediaCollection('default');
+        }
 
-        $course = Course::create($data);
 
-        $course->addMediaFromRequest('image')->toMediaCollection('images');
-
-        return response()->json(['data' => $course], 201);
+        return $this->sendJsonWhisData($course, CourseResource::class);
     }
 
 
-    public function show(Course $course) {
+    public function show(Course $course)
+    {
         return response()->json([
             'data' => $course->load('category', 'author')
         ]);
     }
 
-
-    /**
-     * @throws FileDoesNotExist
-     * @throws FileIsTooBig
-     */
-    public function update(Request $request, Course $course)
+    public function update(UpdateCourse $request, Course $course)
     {
-        $data = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'category_id' => 'required|integer|exists:categories,id',
-            'title_img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
 
-        // Delete old image if a new one is uploaded
         if ($request->hasFile('title_img')) {
-            $course->clearMediaCollection('images');
-            $course->addMediaFromRequest('title_img')->toMediaCollection('images');
+            $course->clearMediaCollection('default');
+            $course->addMediaFromRequest('title_img')->toMediaCollection('default');
         }
 
-        $course->update($data);
+        $course->update($request->all());
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Course updated successfully',
-            'data' => $course,
-        ]);
+        return $this->sendJsonWhisData($course, CourseResource::class);
     }
-
 
 
     public function destroy(Course $course)

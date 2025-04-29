@@ -18,12 +18,6 @@ class Course extends Model implements HasMedia
         'author_id'
     ];
 
-    public function registerMediaCollections(): void
-    {
-        $this->addMediaCollection('title_images')
-            ->singleFile();
-    }
-
     public function category()
     {
         return $this->belongsTo(Category::class);

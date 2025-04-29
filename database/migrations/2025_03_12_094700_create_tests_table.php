@@ -10,11 +10,13 @@ return new class extends Migration
     {
         Schema::create('tests', function (Blueprint $table) {
             $table->id();
-            $table->string('question');
-            $table->json('options'); // Масив відповідей
-            $table->json('correct_answers'); // Масив правильних відповідей
-            $table->unsignedBigInteger('section_id');
-            $table->foreign('section_id')->references('id')->on('sections')->onDelete('cascade');
+            $table->string('title'); // Test title
+            $table->json('questions'); // Array of questions with their options
+            $table->integer('time_per_question')->nullable()->default(30);
+            $table->foreignId('section_id')
+            ->unique()
+            ->constrained('sections')
+            ->onDelete('cascade');
             $table->timestamps();
         });
     }

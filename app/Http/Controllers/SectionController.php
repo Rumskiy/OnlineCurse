@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Section\CreateSection\CreateSectionRequest;
+use App\Http\Resources\Course\CourseResource;
+use App\Http\Resources\Section\SectionResource;
 use App\Models\Section;
 use Illuminate\Http\Request;
 
@@ -10,42 +13,44 @@ class SectionController extends Controller
     public function index($courseId)
     {
         $sections = Section::where('course_id', $courseId)->orderBy('order')->get();
-        return response()->json($sections);
+
+        return response()->json(SectionResource::collection($sections));
     }
 
-    public function store(Request $request)
+
+    public function store(CreateSectionRequest $request, Section $section)
     {
-        $data = $request->validate([
-            'title' => 'required|string',
-            'title_img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
-            'section_video' => 'required|nullable|mimetypes:video/mp4,video/quicktime|max:102400', // 100MB max
-            'content' => 'nullable|json',
-            'course_id' => 'required|exists:courses,id',
-            'order' => 'required|integer',
+        $section = Section::create([
+            'title' => $request->title,
+            'description' => $request->description,
+            'contentSection' => $request->contentSection,
+            'course_id' => $request->course_id,
         ]);
 
-        $section = Section::create($data);
-
-        if ($request->hasFile('title_img')) {
-            $section->addMediaFromRequest('title_img')->toMediaCollection('title_images');
+        if ($request->hasFile('section_video')) {
+            $section->addMediaFromRequest('section_video')->toMediaCollection('default');
         }
 
-        return response()->json($section, 201);
+        return $this->sendJsonWhisData($section, SectionResource::class);
     }
 
-
-
-    public function show(Section $section)
+    public function show($id)
     {
+        $section = Section::find($id);
+
+        if (!$section) {
+            return response()->json(['message' => 'Section not found'], 404);
+        }
+
         return response()->json($section);
     }
+
 
     public function update(Request $request, Section $section)
     {
         $data = $request->validate([
             'title' => 'sometimes|string',
             'content' => 'sometimes|string',
-            'order' => 'sometimes|integer',
         ]);
 
         $section->update($data);

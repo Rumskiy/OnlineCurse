@@ -11,7 +11,8 @@ return new class extends Migration
         Schema::create('sections', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->text('content')->nullable();
+            $table->text('description')->nullable();
+            $table->text('contentSection')->nullable();
             $table->unsignedBigInteger('course_id');
             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
             $table->integer('order')->nullable();

@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB; // Додав імпорт DB
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -16,11 +17,10 @@ return new class extends Migration
             $table->string('firstName')->nullable();
             $table->string('lastName')->nullable();
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable()->default(DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('avatar')->nullable();
-            $table->enum('role', ['1', '2', '3'])->default('1');
-            $table->enum('status', ['active', 'banned'])->default('active');
+            $table->enum('role', ['1', '2', '3'])->default('1'); // Подумай про використання констант або окремої таблиці ролей
+            $table->enum('status', ['active', 'banned'])->default('active'); // Аналогічно для статусів
             $table->timestamps();
         });
 
@@ -32,7 +32,7 @@ return new class extends Migration
 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
+            $table->foreignUuid('user_id')->nullable()->constrained('users')->cascadeOnDelete(); // Додав зв'язок і cascadeOnDelete
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');
@@ -45,8 +45,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
+        // Порядок важливий через зовнішні ключі
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('users');
     }
 };

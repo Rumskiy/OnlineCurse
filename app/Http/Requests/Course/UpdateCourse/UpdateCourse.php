@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Course\CreateCourse;
+namespace App\Http\Requests\Course\UpdateCourse;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CreateCourse extends FormRequest
+class UpdateCourse extends FormRequest
 {
     public function authorize(): bool
     {
