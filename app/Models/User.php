@@ -37,12 +37,4 @@ class User extends Authenticatable implements HasMedia
             'password' => 'hashed',
         ];
     }
-
-    public function registerMediaCollections(): void
-    {
-        $this->addMediaCollection('avatar') // Приклад для аватара
-        ->singleFile(); // Дозволити лише один файл
-
-        $this->addMediaCollection('temporary_uploads'); // Наша тимчасова колекція для завантажень
-    }
 }

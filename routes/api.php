@@ -4,7 +4,6 @@ use App\Http\Controllers\admin\DashboardController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\AccountController;
-use App\Http\Controllers\MediaUploadController;
 use App\Http\Controllers\QuizAttemptController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\TestController;
@@ -24,7 +23,7 @@ Route::post('authenticate', [AuthenticationController::class, 'authenticate']);
 Route::post('register', [RegisterController::class, 'register']);
 
 Route::middleware('auth:sanctum')->get('account', [AccountController::class, 'getUser']);
-Route::middleware('auth:sanctum')->put('account', [AccountController::class, 'update']);
+Route::middleware('auth:sanctum')->post('account', [AccountController::class, 'update']);
 
 Route::prefix('categories')->group(function () {
     Route::get('/', [CategoryController::class, 'index']);

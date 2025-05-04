@@ -50,9 +50,11 @@ class CourseController extends Controller
 
     public function show(Course $course)
     {
-        return response()->json([
-            'data' => $course->load('category', 'author')
-        ]);
+        $course->load(['category', 'author']);
+        return $this->sendJsonWhisData($course, CourseResource::class);
+//        return response()->json([
+//            'data' => $course->load('category', 'author')
+//        ]);
     }
 
     public function update(UpdateCourse $request, Course $course)

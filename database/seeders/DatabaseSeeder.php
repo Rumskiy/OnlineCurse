@@ -21,7 +21,8 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@admin.com',
             'firstName' => 'Admin',
             'lastName' => 'Admin',
-            'password' => Hash::make('121212')
+            'password' => Hash::make('121212'),
+            'role' => '2'
         ]);
 
         // Створення курсів, секцій та тестів

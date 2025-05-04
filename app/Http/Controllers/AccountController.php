@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\User\Auth\UpdateUserRequest;
+use App\Http\Resources\user\UserResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -12,39 +13,31 @@ class AccountController extends Controller
     {
         $user = Auth::user();
 
-        return response()->json([
-            'id' => (string) $user->id,
-            'firstName' => $user->firstName,
-            'lastName' => $user->lastName,
-            'email' => $user->email,
-            'role' => $user->role,
-            'status' => $user->status,
-        ]);
+        return $this->sendJsonWhisData($user, UserResource::class);
+
     }
 
-    public function update(Request $request)
+    public function update(UpdateUserRequest $request)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        $request->validate([
-            'firstName' => 'required|string|min:3|max:255',
-            'lastName' => 'required|string|min:3|max:255',
-            'password' => 'nullable|string|min:6',
-        ]);
-
-        $user->firstName = $request->input('firstName');
-        $user->lastName = $request->input('lastName');
-
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->input('password'));
+        if ($request->hasFile('avatar_img')) {
+            $user->clearMediaCollection('default');
+            $user->addMediaFromRequest('avatar_img')->toMediaCollection('default');
         }
 
-        $user->save();
+        $data = $request->validated();
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Account updated successfully',
-            'user' => $user
-        ]);
+        // Hash new password if provided, otherwise drop the key
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($data['password']);
+        } else {
+            unset($data['password']);
+        }
+
+        $user->update($data);
+
+        return $this->sendJsonWhisData($user, UserResource::class);
     }
 }
