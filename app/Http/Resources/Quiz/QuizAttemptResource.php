@@ -22,12 +22,13 @@ class QuizAttemptResource extends JsonResource
             // Включаємо інформацію про тест, секцію та курс
             'test' => new TestBasicResource($this->whenLoaded('test')),
             // 'section' і 'course' будуть завантажені через 'test'
-            'section_title' => $this->whenLoaded('test', function() {
+            'section_title' => $this->whenLoaded('test', function () {
                 return $this->test->section->title ?? null;
             }),
-            'course_title' => $this->whenLoaded('test', function() {
+            'course_title' => $this->whenLoaded('test', function () {
                 return $this->test->section->course->title ?? null;
             }),
+            'user_id' => $this->user_id ?? null,
         ];
     }
 }

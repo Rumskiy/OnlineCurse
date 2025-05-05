@@ -24,7 +24,6 @@ class QuizAttemptController extends Controller
             'test.section.course'
         ])
             ->where('user_id', $user->id)
-            ->latest()
             ->get();
 
         return QuizAttemptResource::collection($attempts);
