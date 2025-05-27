@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Course\CreateCourse\CreateCourse;
 use App\Http\Requests\Course\UpdateCourse\UpdateCourse;
 use App\Http\Resources\Course\CourseResource;
+use App\Models\Category;
 use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -70,6 +71,14 @@ class CourseController extends Controller
         return $this->sendJsonWhisData($course, CourseResource::class);
     }
 
+    public function byCategoryId(Request $request, $id)
+    {
+        $courses = Course::where('category_id', $id)
+            ->with(['category', 'author'])
+            ->get();
+
+        return $this->sendJsonWhisData($courses, CourseResource::class);
+    }
 
     public function destroy(Course $course)
     {

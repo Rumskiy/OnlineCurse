@@ -38,6 +38,7 @@ Route::prefix('courses')->group(function () {
     Route::get('/', [CourseController::class, 'index']);
     Route::post('/', [CourseController::class, 'store'])->middleware('auth:sanctum');
     Route::get('/{course}', [CourseController::class, 'show']);
+    Route::get('/category/{course}', [CourseController::class, 'byCategoryId']);
     Route::post('/edit/{course}', [CourseController::class, 'update'])->middleware('auth:sanctum');
     //Section
     Route::get('{course}/sections', [SectionController::class, 'index']); // Отримати секції курсу
