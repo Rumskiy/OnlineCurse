@@ -4,6 +4,7 @@ use App\Http\Controllers\admin\DashboardController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\QuizAttemptController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\TestController;
@@ -38,6 +39,7 @@ Route::prefix('courses')->group(function () {
     Route::get('/', [CourseController::class, 'index']);
     Route::post('/', [CourseController::class, 'store'])->middleware('auth:sanctum');
     Route::get('/{course}', [CourseController::class, 'show']);
+    Route::delete('/{course}', [CourseController::class, 'destroy'])->middleware('auth:sanctum');
     Route::get('/category/{course}', [CourseController::class, 'byCategoryId']);
     Route::post('/edit/{course}', [CourseController::class, 'update'])->middleware('auth:sanctum');
     //Section
@@ -57,12 +59,14 @@ Route::prefix('courses')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/quiz/attempts', [QuizAttemptController::class, 'store'])->name('quiz.attempts.store');
     Route::get('/quiz/attempts', [QuizAttemptController::class, 'index'])->name('quiz.attempts.index'); // Отримати історію спроб
+    Route::get('/quiz/attempts/by-course', [QuizAttemptController::class, 'userAttemptsByCourse'])->name('quiz.attempts.byCourse'); // НОВИЙ МАРШРУТ
     Route::get('/quiz/attempts/{id}', [QuizAttemptController::class, 'show'])->name('quiz.attempts.show'); // Отримати деталі спроби
 });
 
 
 
 Route::middleware('auth:sanctum')->get('/user/courses', [CourseController::class, 'userCourses']);
-
+Route::middleware('auth:sanctum')->get('/courses/{course}/certificate', [CertificateController::class, 'generateCertificate'])
+    ->name('courses.certificate.generate');
 
 

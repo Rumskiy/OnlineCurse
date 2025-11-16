@@ -27,6 +27,13 @@ class CreateSectionRequest extends FormRequest
             'contentSection' => ['required', 'string'],
             'course_id' => ['required', 'exists:courses,id'],
             'section_img' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'section_file' => [
+                'nullable',          // поле может быть пустым
+                'file',              // должно быть загруженным файлом
+                'mimes:pdf,doc,docx',// разрешаем только PDF, DOC и DOCX
+                'max:40080',         // максимально 12048 КБ (≈12 МБ)
+            ],
+
         ];
     }
 }

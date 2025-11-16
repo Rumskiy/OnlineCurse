@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\Quiz\QuizAttemptDetailResource;
 use App\Http\Resources\Quiz\QuizAttemptResource;
+use App\Models\Course;
 use App\Models\QuizAttempt;
 use App\Models\Test; // Імпортуємо Test
 use Illuminate\Http\Request;
@@ -161,6 +162,76 @@ class QuizAttemptController extends Controller
             Log::error('Error saving quiz attempt: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json(['message' => 'Failed to save quiz attempt'], 500);
         }
+    }
+
+    public function userAttemptsByCourse(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // 1. Отримати всі спроби користувача з необхідними зв'язками
+        $allUserAttempts = QuizAttempt::with([
+            'test.section.course', // Для групування та інформації про курс
+            'test' => function ($query) { // Для деталей тесту в QuizAttemptResource
+                $query->select(['id', 'title', 'section_id']); // Вибираємо тільки потрібні поля тесту
+            }
+        ])
+            ->where('user_id', $user->id)
+            ->orderByDesc('completed_at')
+            ->get();
+
+        if ($allUserAttempts->isEmpty()) {
+            return response()->json(['data' => [], 'message' => 'У вас ще немає спроб проходження тестів.'], 200);
+        }
+
+        // 2. Згрупувати спроби за ID курсу
+        // Ключем буде ID курсу, значенням - колекція спроб для цього курсу
+        $groupedByCourseId = $allUserAttempts->groupBy(function ($attempt) {
+            // Переконуємось, що шлях до course_id існує
+            if ($attempt->test && $attempt->test->section && $attempt->test->section->course) {
+                return $attempt->test->section->course->id;
+            }
+            return 'unknown_course'; // Для спроб, де курс не вдалося визначити
+        });
+
+        // 3. Сформувати відповідь
+        $result = [];
+        $courseIds = $groupedByCourseId->keys()->filter(fn($key) => $key !== 'unknown_course')->toArray();
+
+        if (!empty($courseIds)) {
+            // Отримати моделі курсів одним запитом
+            $courses = Course::whereIn('id', $courseIds)->get()->keyBy('id');
+
+            foreach ($groupedByCourseId as $courseId => $attemptsInCourse) {
+                if ($courseId === 'unknown_course') {
+                    // Обробка спроб без визначеного курсу (якщо потрібно)
+                    // $result[] = [
+                    // 'course' => ['id' => null, 'title' => 'Курс не визначено'],
+                    // 'attempts' => QuizAttemptResource::collection($attemptsInCourse)
+                    // ];
+                    continue;
+                }
+
+                $course = $courses->get($courseId);
+                if ($course) {
+                    $result[] = [
+                        // Використовуйте CourseResource, якщо він у вас є і налаштований
+                        // 'course' => new CourseResource($course),
+                        'course' => [ // Або просто поверніть потрібні дані курсу
+                            'id' => $course->id,
+                            'title' => $course->title,
+                            // Додайте інші поля курсу, якщо потрібно
+                        ],
+                        'attempts' => QuizAttemptResource::collection($attemptsInCourse)
+                    ];
+                }
+            }
+        }
+
+
+        return response()->json(['data' => $result]);
     }
 
     // ... show() ... - Логіка залишається схожою, але QuizAttemptDetailResource
