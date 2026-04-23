@@ -11,13 +11,18 @@ use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ProgressController;
 
 Route::post('authenticate', [AuthenticationController::class, 'authenticate'])->middleware('throttle:5,1');
-
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index']);
     Route::post('logout', [AuthenticationController::class, 'logout']);
+    
+    // Progress
+    Route::post('progress/section/{sectionId}/complete', [ProgressController::class, 'markAsCompleted']);
+    Route::get('progress/course/{courseId}', [ProgressController::class, 'getProgress']);
+    Route::get('progress/stats', [ProgressController::class, 'getUserStats']);
 });
 
 Route::post('authenticate', [AuthenticationController::class, 'authenticate']);

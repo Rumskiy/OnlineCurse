@@ -10,7 +10,7 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, ValidatesRequests;
 
-    public static function sendJsonWhisData($data,$resourceClass){
+    public static function sendJsonWithData($data,$resourceClass){
         if (!$data){
             return response([
                 'status' => false,
@@ -29,7 +29,7 @@ class Controller extends BaseController
         ]);
     }
 
-    public static function sendJsonWhisToken($data,$resourceClass,$token){
+    public static function sendJsonWithToken($data,$resourceClass,$token){
         if (!$data){
             return response([
                 'status' => false,

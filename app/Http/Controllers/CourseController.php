@@ -16,7 +16,7 @@ class CourseController extends Controller
     {
         $data = Course::all();
 
-        return $this->sendJsonWhisData($data, CourseResource::class);
+        return $this->sendJsonWithData($data, CourseResource::class);
     }
 
     public function userCourses(Request $request)
@@ -27,7 +27,7 @@ class CourseController extends Controller
             ->with('category')
             ->get();
 
-        return $this->sendJsonWhisData($courses, CourseResource::class);
+        return $this->sendJsonWithData($courses, CourseResource::class);
     }
 
 
@@ -45,14 +45,14 @@ class CourseController extends Controller
         }
 
 
-        return $this->sendJsonWhisData($course, CourseResource::class);
+        return $this->sendJsonWithData($course, CourseResource::class);
     }
 
 
     public function show(Course $course)
     {
         $course->load(['category', 'author']);
-        return $this->sendJsonWhisData($course, CourseResource::class);
+        return $this->sendJsonWithData($course, CourseResource::class);
 //        return response()->json([
 //            'data' => $course->load('category', 'author')
 //        ]);
@@ -68,7 +68,7 @@ class CourseController extends Controller
 
         $course->update($request->all());
 
-        return $this->sendJsonWhisData($course, CourseResource::class);
+        return $this->sendJsonWithData($course, CourseResource::class);
     }
 
     public function byCategoryId(Request $request, $id)
@@ -77,7 +77,7 @@ class CourseController extends Controller
             ->with(['category', 'author'])
             ->get();
 
-        return $this->sendJsonWhisData($courses, CourseResource::class);
+        return $this->sendJsonWithData($courses, CourseResource::class);
     }
 
     public function destroy(Course $course)

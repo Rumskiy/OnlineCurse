@@ -13,7 +13,7 @@ class AccountController extends Controller
     {
         $user = Auth::user();
 
-        return $this->sendJsonWhisData($user, UserResource::class);
+        return $this->sendJsonWithData($user, UserResource::class);
 
     }
 
@@ -38,6 +38,6 @@ class AccountController extends Controller
 
         $user->update($data);
 
-        return $this->sendJsonWhisData($user, UserResource::class);
+        return $this->sendJsonWithData($user, UserResource::class);
     }
 }

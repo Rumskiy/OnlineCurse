@@ -66,56 +66,62 @@ class CertificateController extends Controller
      */
     private function checkEligibilityForCertificate(User $user, Course $course): array
     {
-        // 1. Отримати всі ID тестів для даного курсу
-        // Завантажуємо секції та їх тести для курсу
+        // 1. Отримати всі ID секцій для даного курсу
         $course->load('sections.tests');
-
+        $sectionIds = $course->sections->pluck('id')->toArray();
         $testIds = $course->sections->flatMap(function ($section) {
             return $section->tests;
         })->pluck('id')->unique()->toArray();
 
-        if (empty($testIds)) {
+        if (empty($sectionIds)) {
             return [
                 'can_generate' => false,
-                'reason' => 'У цьому курсі немає тестів.',
+                'reason' => 'У цьому курсі немає розділів.',
                 'average_score' => null,
             ];
         }
 
+        // 2. Перевірка прогресу по секціях
+        $completedSectionsCount = \App\Models\SectionProgress::where('user_id', $user->id)
+            ->whereIn('section_id', $sectionIds)
+            ->where('is_completed', true)
+            ->count();
+
+        if ($completedSectionsCount < count($sectionIds)) {
+            return [
+                'can_generate' => false,
+                'reason' => "Ви пройшли {$completedSectionsCount} з " . count($sectionIds) . " розділів. Необхідно пройти всі розділи.",
+                'average_score' => null,
+            ];
+        }
+
+        // 3. Перевірка тестів
+        if (empty($testIds)) {
+            return [
+                'can_generate' => true,
+                'average_score' => 100, // Якщо тестів немає, але розділи пройдені
+                'reason' => 'Умови виконані (тести відсутні).',
+            ];
+        }
+
         $totalPercentageSum = 0;
-        $attemptedRequiredTestsCount = 0;
         $allTestsAttempted = true;
 
-        // 2. Для кожного тесту курсу знайти останню спробу користувача
         foreach ($testIds as $testId) {
             $latestAttempt = QuizAttempt::where('user_id', $user->id)
                 ->where('test_id', $testId)
-                ->orderByDesc('completed_at') // Остання за часом спроба
+                ->orderByDesc('completed_at')
                 ->first();
 
             if (!$latestAttempt) {
-                // Користувач не пройшов цей тест взагалі
                 $allTestsAttempted = false;
-                break; // Немає сенсу перевіряти далі, якщо один тест не пройдено
+                break;
             }
 
-            // Умова про те, що кожен тест має бути складений > 50%
-            // Згідно з останнім уточненням, головне - середня оцінка > 60%
-            // і факт проходження всіх тестів.
-            // Якщо б була умова "кожен тест > X%", то тут була б перевірка:
-            // if ($latestAttempt->percentage <= 50) {
-            //     return [
-            //         'can_generate' => false,
-            //         'reason' => "Тест (ID: {$testId}) не складено з результатом більше 50%. Ваш результат: {$latestAttempt->percentage}%.",
-            //         'average_score' => null, // Можна розрахувати поточну середню, якщо потрібно
-            //     ];
-            // }
-
             $totalPercentageSum += $latestAttempt->percentage;
-            $attemptedRequiredTestsCount++;
         }
 
-        if (!$allTestsAttempted || $attemptedRequiredTestsCount < count($testIds)) {
+        if (!$allTestsAttempted) {
             return [
                 'can_generate' => false,
                 'reason' => 'Ви не пройшли всі необхідні тести для цього курсу.',
@@ -123,11 +129,8 @@ class CertificateController extends Controller
             ];
         }
 
-        // 3. Розрахунок середньої оцінки
-        // $attemptedRequiredTestsCount має дорівнювати count($testIds) на цьому етапі
         $averageScore = count($testIds) > 0 ? round($totalPercentageSum / count($testIds), 2) : 0;
 
-        // 4. Перевірка умови на середню оцінку (мінімум 60%)
         if ($averageScore >= 60) {
             return [
                 'can_generate' => true,

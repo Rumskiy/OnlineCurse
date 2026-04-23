@@ -3,109 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Сертифікат</title>
+    <title>Сертифікат про завершення</title>
     <style>
-        /* Важливо! dompdf потребує, щоб шрифти були доступні. DejaVu Sans зазвичай підтримує кирилицю. */
-        /* Ви можете вказати шлях до .ttf файлу, якщо потрібно: */
-        /* @font-face {
-            font-family: 'DejaVu Sans';
-            src: url('{{ storage_path('fonts/DejaVuSans.ttf') }}') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        } */
+        @page {
+            margin: 0;
+            size: a4 landscape;
+        }
         body {
-            font-family: 'DejaVu Sans', sans-serif; /* Використовуйте шрифт, що підтримує кирилицю */
+            font-family: 'DejaVu Sans', sans-serif;
             margin: 0;
             padding: 0;
-            color: #333;
+            background-color: #f8fafc;
+            color: #1e293b;
         }
-        .certificate-container {
-            width: 700px; /* Ширина A4 приблизно 210mm, тут для прикладу */
-            height: 495px; /* Висота A4 приблизно 297mm */
-            margin: 30px auto;
-            padding: 30px;
-            border: 10px solid #c0a062; /* Золотистий колір рамки */
+        .wrapper {
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .certificate-card {
+            width: 100%;
+            height: 550px;
+            background-color: #ffffff;
+            border: 15px solid #6366f1; /* Indigo border */
+            position: relative;
+            box-sizing: border-box;
+            padding: 40px;
             text-align: center;
-            position: relative; /* Для позиціонування дати */
-            background-color: #fdfdfa; /* Легкий фон */
         }
-        h1 {
-            font-size: 38px;
-            color: #2c3e50;
-            margin-bottom: 20px;
-            text-transform: uppercase;
+        .inner-border {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            border: 1px solid #94a3b8;
         }
-        h2 {
-            font-size: 20px;
-            color: #34495e;
+        .header {
             margin-bottom: 30px;
+        }
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            color: #4338ca;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+        .subtitle {
+            font-size: 16px;
+            color: #64748b;
+            margin-top: 5px;
             font-weight: normal;
         }
-        .recipient-name {
-            font-size: 28px;
+        .content {
+            margin-top: 40px;
+        }
+        .presented-to {
+            font-size: 18px;
+            color: #64748b;
+            margin-bottom: 15px;
+        }
+        .name {
+            font-size: 38px;
             font-weight: bold;
-            color: #bf8f3f; /* Темно-золотистий */
-            margin: 20px 0;
-            border-bottom: 2px solid #e0c082;
+            color: #0f172a;
+            margin: 15px 0;
+            border-bottom: 2px solid #6366f1;
             display: inline-block;
             padding-bottom: 5px;
         }
-        .course-details {
-            font-size: 18px;
-            margin-bottom: 15px;
+        .course-text {
+            font-size: 20px;
+            margin: 20px 0;
+            line-height: 1.4;
         }
         .course-name {
-            font-style: italic;
             font-weight: bold;
+            color: #4338ca;
+            font-size: 24px;
         }
-        .score {
-            font-size: 20px;
-            font-weight: bold;
-            color: #27ae60; /* Зелений для успіху */
-            margin-top: 20px;
-            margin-bottom: 30px;
-        }
-        .signature-line {
-            width: 250px;
-            border-bottom: 1px solid #7f8c8d;
-            margin: 50px auto 5px auto;
-        }
-        .signature-title {
-            font-size: 14px;
-            color: #7f8c8d;
-        }
-        .issue-date {
+        .footer {
+            margin-top: 60px;
+            width: 100%;
             position: absolute;
-            bottom: 25px; /* Відступ від нижнього краю рамки */
-            right: 25px;  /* Відступ від правого краю рамки */
-            font-size: 14px;
-            color: #555;
+            bottom: 40px;
+            left: 0;
+            padding: 0 40px;
+            box-sizing: border-box;
         }
-        .organization-name { /* Можете додати назву вашої організації */
-            font-size: 16px;
-            margin-top: 10px;
-            color: #7f8c8d;
+        .signature-box {
+            width: 250px;
+            float: left;
+            text-align: center;
+        }
+        .date-box {
+            width: 250px;
+            float: right;
+            text-align: center;
+        }
+        .line {
+            border-bottom: 1px solid #94a3b8;
+            margin-bottom: 5px;
+            min-height: 20px;
+        }
+        .label {
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .seal {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            margin-left: -50px;
+            width: 100px;
+            height: 100px;
+            background-color: #6366f1;
+            border-radius: 50%;
+            color: white;
+            text-align: center;
+            line-height: 100px;
+            font-weight: bold;
+            font-size: 10px;
+            text-transform: uppercase;
+            transform: rotate(-15deg);
+            border: 4px double white;
+            opacity: 0.8;
         }
     </style>
 </head>
 <body>
-<div class="certificate-container">
-    <h1>Сертифікат</h1>
-    <h2>ПРО УСПІШНЕ ЗАВЕРШЕННЯ КУРСУ</h2>
+    <div class="wrapper">
+        <div class="certificate-card">
+            <div class="inner-border"></div>
+            
+            <div class="header">
+                <h1 class="title">Сертифікат</h1>
+                <p class="subtitle">ПРО УСПІШНЕ ЗАВЕРШЕННЯ НАВЧАННЯ</p>
+            </div>
 
-    <p class="course-details">Цим засвідчується, що</p>
-    <div class="recipient-name">{{ $userName }}</div>
+            <div class="content">
+                <p class="presented-to">Цей сертифікат виданий</p>
+                <div class="name">{{ $userName }}</div>
+                
+                <p class="course-text">
+                    за успішне завершення онлайн-курсу<br>
+                    <span class="course-name">«{{ $courseName }}»</span>
+                </p>
+                
+                <p class="subtitle">Середній результат: {{ $averageScore }}%</p>
+            </div>
 
-    <p class="course-details">
-        успішно завершив(ла) навчання за програмою курсу
-    </p>
-    <p class="course-details course-name">«{{ $courseName }}»</p>
+            <div class="footer">
+                <div class="signature-box">
+                    <div class="line"></div>
+                    <div class="label">Підпис інструктора</div>
+                </div>
+                
+                <div class="date-box">
+                    <div class="line" style="font-weight: bold;">{{ $issueDate }}</div>
+                    <div class="label">Дата видачі</div>
+                </div>
+            </div>
 
-    <div class="signature-line"></div>
-
-    <div class="issue-date">
-        Дата видачі: {{ $issueDate }}
+            <div class="seal">VERIFIED</div>
+        </div>
     </div>
-</div>
 </body>
 </html>

@@ -42,7 +42,7 @@ class SectionController extends Controller
         }
 
 
-        return $this->sendJsonWhisData($section, SectionResource::class);
+        return $this->sendJsonWithData($section, SectionResource::class);
     }
 
     public function show($id)
@@ -91,7 +91,7 @@ class SectionController extends Controller
 
         // Повертаємо оновлену секцію через ресурс
         // Перезавантажуємо модель, щоб ресурс отримав оновлені медіа (якщо потрібно)
-        return $this->sendJsonWhisData($section->fresh(), SectionResource::class);
+        return $this->sendJsonWithData($section->fresh(), SectionResource::class);
     }
 
     public function destroy(Section $section)
