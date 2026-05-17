@@ -16,21 +16,69 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Створення адміністратора
-        User::factory()->create([
-            'email' => 'admin@admin.com',
-            'firstName' => 'Admin',
-            'lastName' => 'Admin',
-            'password' => Hash::make('121212'),
-            'role' => '2'
-        ]);
+        // 1. Створення тестової школи
+        $school = \App\Models\School::firstOrCreate(
+            ['name' => 'Середня школа №12'],
+            [
+                'address' => 'вул. Шевченка, 12, Київ',
+            ]
+        );
 
-        // Створення курсів, секцій та тестів
-//        Course::factory()->count(1)->create()->each(function ($course) {
-//            $course->sections()->saveMany(Section::factory()->count(1)->make())->each(function ($section) {
-//                $section->test()->save(Test::factory()->make());
-//            });
-//        });
+        // 2. Створення адміністратора
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@admin.com'],
+            [
+                'firstName' => 'Admin',
+                'lastName' => 'Admin',
+                'password' => Hash::make('121212'),
+                'role' => '2',
+                'status' => 'active',
+                'school_id' => $school->id,
+            ]
+        );
+
+        if ($admin && !$admin->school_id) {
+            $admin->update(['school_id' => $school->id]);
+        }
+
+        // 3. Створення вчителя
+        $teacher = User::firstOrCreate(
+            ['email' => 'teacher@teacher.com'],
+            [
+                'firstName' => 'Ірина',
+                'lastName' => 'Мельник',
+                'password' => Hash::make('121212'),
+                'role' => '2',
+                'status' => 'active',
+                'school_id' => $school->id,
+            ]
+        );
+
+        if ($teacher && !$teacher->school_id) {
+            $teacher->update(['school_id' => $school->id]);
+        }
+
+        // 4. Створення тестових класів для школи
+        \App\Models\SchoolClass::firstOrCreate(
+            ['school_id' => $school->id, 'name' => '10-А'],
+            [
+                'academic_year' => '2025/2026',
+                'homeroom_teacher_id' => $teacher->id,
+            ]
+        );
+
+        \App\Models\SchoolClass::firstOrCreate(
+            ['school_id' => $school->id, 'name' => '11-Б'],
+            [
+                'academic_year' => '2025/2026',
+                'homeroom_teacher_id' => $teacher->id,
+            ]
+        );
+
+        // 5. Створення тестових курсів
+        $this->call([
+            CourseSeeder::class,
+        ]);
     }
 }
 

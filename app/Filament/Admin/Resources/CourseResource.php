@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\CourseResource\Pages;
+use App\Filament\Admin\Resources\CourseResource\RelationManagers;
 use App\Models\Course;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -17,6 +18,8 @@ use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 class CourseResource extends Resource
 {
     protected static ?string $model = Course::class;
+
+    protected static bool $isScopedToTenant = false;
 
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
     
@@ -95,6 +98,13 @@ class CourseResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\SectionsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

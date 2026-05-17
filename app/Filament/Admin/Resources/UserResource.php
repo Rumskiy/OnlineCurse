@@ -13,6 +13,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
+use Filament\Forms\Get;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
@@ -48,11 +49,12 @@ class UserResource extends Resource
                             ->maxLength(255),
                         Select::make('role')
                             ->options([
-                                '2' => 'Admin (Super)',
-                                '1' => 'User',
-                                '3' => 'Teacher/Guest',
+                                'admin' => 'Адміністратор',
+                                'teacher' => 'Вчитель',
+                                'student' => 'Учень',
                             ])
-                            ->required(),
+                            ->required()
+                            ->live(), // Make it live so class field responds to role changes
                         Select::make('status')
                             ->options([
                                 'active' => 'Active',
@@ -60,14 +62,21 @@ class UserResource extends Resource
                                 'inactive' => 'Inactive',
                             ])
                             ->required(),
+                        Select::make('school_class_id')
+                            ->label('Шкільний клас')
+                            ->relationship('schoolClass', 'name')
+                            ->placeholder('Оберіть клас (тільки для учнів)')
+                            ->searchable()
+                            ->preload()
+                            ->visible(fn (Get $get) => $get('role') === 'student')
+                            ->nullable(),
                     ])->columns(2),
                 Forms\Components\Section::make('Avatar')
                     ->schema([
                         SpatieMediaLibraryFileUpload::make('avatar')
                             ->collection('default')
                             ->avatar()
-                            ->imageEditor()
-                            ->circleHorizontal(),
+                            ->imageEditor(),
                     ])
             ]);
     }
@@ -91,9 +100,15 @@ class UserResource extends Resource
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'admin', '2' => 'danger',
-                        'user' => 'info',
+                        'teacher', '3' => 'warning',
+                        'student', '1' => 'info',
                         default => 'gray',
                     }),
+                Tables\Columns\TextColumn::make('schoolClass.name')
+                    ->label('Клас')
+                    ->placeholder('Не призначено')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {

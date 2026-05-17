@@ -4,100 +4,87 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Section\CreateSection\CreateSectionRequest;
 use App\Http\Requests\Section\UpdateSection\UpdateSectionRequest;
-use App\Http\Resources\Course\CourseResource;
 use App\Http\Resources\Section\SectionResource;
 use App\Models\Section;
+use App\Services\SectionService;
+use App\Repositories\Contracts\SectionRepositoryInterface;
 use Illuminate\Http\Request;
 
 class SectionController extends Controller
 {
+    protected $sectionService;
+    protected $sectionRepository;
+
+    public function __construct(SectionService $sectionService, SectionRepositoryInterface $sectionRepository)
+    {
+        $this->sectionService = $sectionService;
+        $this->sectionRepository = $sectionRepository;
+    }
+
     public function index($courseId)
     {
-        $sections = Section::where('course_id', $courseId)->orderBy('order')->get();
-
+        $sections = $this->sectionRepository->getByCourseId($courseId);
         return response()->json(SectionResource::collection($sections));
     }
 
-
-    public function store(CreateSectionRequest $request) // Змінив Section $section на CreateSectionRequest
+    public function store(CreateSectionRequest $request)
     {
-        // Ваша логіка створення
-        $section = Section::create([
+        $data = [
             'title' => $request->title,
             'description' => $request->description,
             'contentSection' => $request->contentSection,
             'course_id' => $request->course_id,
-        ]);
+        ];
 
-        // У вашому store методі ви використовували 'section_video' для відео
-        // Тепер для файлу домашнього завдання будемо використовувати 'section_file'
-        if ($request->hasFile('section_file')) {
-            // Ви можете створити окрему медіа-колекцію для файлів
-            $section->addMediaFromRequest('section_file')->toMediaCollection('section_files');
-        }
+        $sectionFile = $request->file('section_file');
+        $sectionVideo = $request->file('section_video');
 
-        // Якщо є відео
-        if ($request->hasFile('section_video')) {
-            $section->addMediaFromRequest('section_video')->toMediaCollection('section_videos');
-        }
-
+        $section = $this->sectionService->createSection($data, $sectionFile, $sectionVideo);
 
         return $this->sendJsonWithData($section, SectionResource::class);
     }
 
     public function show($id)
     {
-        $section = Section::find($id);
+        $section = $this->sectionRepository->findById($id);
 
         if (!$section) {
-            return response()->json(['message' => 'Section not found'], 404);
+            return response()->json(['message' => 'Розділ не знайдено'], 404);
         }
 
         return response()->json($section);
     }
 
-
     public function update(UpdateSectionRequest $request, Section $section)
     {
-        $validatedData = $request->validated(); // Отримуємо валідовані дані
+        $validatedData = $request->validated();
 
-        // Оновлюємо текстові поля
-        $section->update([
+        $data = [
             'title' => $validatedData['title'] ?? $section->title,
             'description' => $validatedData['description'] ?? $section->description,
             'contentSection' => $validatedData['contentSection'] ?? $section->contentSection,
-            // course_id зазвичай не оновлюється, але якщо потрібно, додайте
-        ]);
+        ];
 
-        // Обробка завантаження нового файлу
-        if ($request->hasFile('section_file')) {
-            // Опціонально: видалити попередній файл, якщо він існував
-            // Потрібно вказати назву колекції, яку ви використовуєте для файлів секції
-            $section->clearMediaCollection('section_files'); // Або інша назва вашої колекції для файлів
-            $section->addMediaFromRequest('section_file')->toMediaCollection('section_files');
-        } elseif ($request->boolean('remove_section_file')) {
-            // Якщо прийшов прапорець на видалення файлу
-            $section->clearMediaCollection('section_files');
-        }
+        $sectionFile = $request->file('section_file');
+        $sectionVideo = $request->file('section_video');
+        $removeSectionFile = $request->boolean('remove_section_file');
+        $removeSectionVideo = $request->boolean('remove_section_video');
 
-        // Обробка завантаження нового відео (якщо потрібно оновлювати і відео тут)
-        if ($request->hasFile('section_video')) {
-            $section->clearMediaCollection('section_videos');
-            $section->addMediaFromRequest('section_video')->toMediaCollection('section_videos');
-        } elseif ($request->boolean('remove_section_video')) {
-            $section->clearMediaCollection('section_videos');
-        }
+        $updatedSection = $this->sectionService->updateSection(
+            $section, 
+            $data, 
+            $sectionFile, 
+            $sectionVideo, 
+            $removeSectionFile, 
+            $removeSectionVideo
+        );
 
-
-        // Повертаємо оновлену секцію через ресурс
-        // Перезавантажуємо модель, щоб ресурс отримав оновлені медіа (якщо потрібно)
-        return $this->sendJsonWithData($section->fresh(), SectionResource::class);
+        return $this->sendJsonWithData($updatedSection, SectionResource::class);
     }
 
     public function destroy(Section $section)
     {
-        $section->delete();
-
+        $this->sectionService->deleteSection($section);
         return response()->json(['message' => 'Section deleted']);
     }
 }
